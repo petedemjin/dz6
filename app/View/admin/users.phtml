@@ -1,0 +1,106 @@
+<script src="/public/js/jquery.js"></script>
+
+<?php
+/** @var $message \App\Model\Message */
+/** @var $user \App\Model\User */
+//$user = new \App\Model\User();
+$user = $this->user;
+
+?>
+
+Вы вошли как <?=$user->getName();?>#<?=$user->getId();?> <a href="/logout">выйти</a>
+<br><br>
+
+Список пользователей:
+<br><br>
+
+<?php if($users = $this->users): ?>
+    <?php foreach ($users as $user): ?>
+        <div class="user" id="user_block_<?=$user->getId();?>">
+            id: <?=$user->getId();?>
+            name: <input type="text" id="user_name_<?=$user->getId();?>" value="<?=htmlspecialchars($user->getName());?>">
+            email: <input type="text" id="user_email_<?=$user->getId();?>" value="<?=htmlspecialchars($user->email);?>">
+            password: <input type="text" id="user_password_<?=$user->getId();?>">
+            <br>
+            <input type="button" onclick="saveUser(<?=$user->getId();?>);" value="Сохранить">
+            <input type="button" onclick="deleteUser(<?=$user->getId();?>);" value="Удалить">
+
+            <div id="resp_<?=$user->getId();?>">
+            </div>
+        </div>
+    <?php endforeach; ?>
+<?php else: ?>
+    Сообщений пока нет
+<?php endif; ?>
+
+<script>
+    function saveUser(userId)
+    {
+        $.post(
+            '/admin/saveUser',
+            {
+                id: userId,
+                fio: $('#user_name_' + userId).val(),
+                email: $('#user_email_' + userId).val(),
+                password: $('#user_password_' + userId).val(),
+            },
+            function (r) {
+                if (r.error) {
+                    $('#resp_' + userId).html('<span style="color:red">' + r.error + '</span>');
+                } else {
+                    $('#resp_' + userId).html('<span style="color:green">' + r.result + '</span>');
+                }
+            }
+        );
+    }
+
+    function deleteUser(userId)
+    {
+        $.post(
+            '/admin/deleteUser',
+            {
+                id: userId,
+            },
+            function (r) {
+                if (r.error) {
+                    $('#resp_' + userId).html('<span style="color:red">' + r.error + '</span>');
+                } else {
+                    $('#resp_' + userId).html('<span style="color:green">' + r.result + '</span>');
+                    setTimeout(function() {
+                        $('#user_block_' + userId).remove();
+                    }, 1500);
+                }
+            }
+        );
+    }
+
+    function addUser()
+    {
+        $.post(
+            '/admin/addUser',
+            {
+                fio: $('#user_name').val(),
+                email: $('#user_email').val(),
+                password: $('#user_password').val(),
+            },
+            function (r) {
+                if (r.error) {
+                    $('#resp').html('<span style="color:red">' + r.error + '</span>');
+                } else {
+                    $('#resp').html('<span style="color:green">' + r.result + '</span>');
+                    location.reload();
+                }
+            }
+        );
+    }
+</script>
+
+Добавить пользователя
+
+name: <input type="text" id="user_name"> <br>
+email: <input type="text" id="user_email"> <br>
+password: <input type="text" id="user_password">
+<input type="button" value="Отправить" onclick="addUser();">
+<div id="resp">
+
+</div>
